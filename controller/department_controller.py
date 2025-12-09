@@ -3,12 +3,19 @@ from models.department import Department
 
 
 class DepartmentController:
-    def __init__(self, db: Database):
+    def __init__(self, db: Database, current_user):
         self.db = db
+        self.current_user = current_user
 
     def create_department(self):
+        if not self.current_user.is_admin():
+            print("Acceso denegado. Solo administradores pueden crear departamentos.")
+            return None
         print("\n--- Crear Departamento ---")
         name = input("Nombre: ")
+        if not name:
+            print("El nombre no puede estar vacío")
+            return None
         manager_id = input("ID del gerente (puede ser vacío): ")
         manager = int(manager_id) if manager_id.isdigit() else None
         dept = Department(name=name, manager_id=manager)
@@ -26,17 +33,26 @@ class DepartmentController:
             print(row)
 
     def edit_department(self):
+        if not self.current_user.is_admin():
+            print("Acceso denegado. Solo administradores pueden editar departamentos.")
+            return
         dept_id = input("ID a editar: ")
         if not dept_id.isdigit():
             print("ID inválido")
             return
         new_name = input("Nuevo nombre: ")
-        manager_id = input("Nuevo ID de gerente: ")
+        if not new_name:
+            print("El nombre no puede estar vacío")
+            return
+        manager_id = input("ID de gerente: ")
         manager = int(manager_id) if manager_id.isdigit() else None
         Department.update_department(self.db, int(dept_id), new_name, manager)
         print("Departamento actualizado.")
 
     def delete_department(self):
+        if not self.current_user.is_admin():
+            print("Acceso denegado. Solo administradores pueden eliminar departamentos.")
+            return
         dept_id = input("ID a eliminar: ")
         if not dept_id.isdigit():
             print("ID inválido")
