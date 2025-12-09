@@ -6,12 +6,21 @@ from models.shift import Shift
 
 
 class ShiftController:
-    def __init__(self, db: Database):
+    def __init__(self, db: Database, current_user):
         self.db = db
+        self.current_user = current_user
 
     def log_shift(self):
         print("\n--- Registrar Horas ---")
-        emp_id = Security.clean_text(input("ID empleado: "))
+        if self.current_user.is_admin() or self.current_user.is_manager():
+            emp_id = Security.clean_text(input("ID empleado: "))
+        else:
+            print("Solo puedes registrar tus propias horas.")
+            emp_id = Security.clean_text(input("Ingresa tu ID de empleado: "))
+
+        if not emp_id:
+            print("El ID de empleado es obligatorio.")
+            return
         proj_id = input("ID proyecto: ")
         date_str = input("Fecha (YYYY-MM-DD): ")
         hours = input("Horas trabajadas: ")
@@ -39,6 +48,9 @@ class ShiftController:
             print(f"Registro guardado con id {shift_id}")
 
     def list_shifts(self):
+        if not self.current_user.is_admin() and not self.current_user.is_manager():
+            print("No tienes permisos para ver registros de tiempo")
+            return
         print("\n--- Registros de Tiempo ---")
         rows = Shift.list_shifts(self.db)
         for row in rows:
