@@ -1,5 +1,8 @@
+import pwinput
+
 from config.database import Database
 from controller.department_controller import DepartmentController
+from controller.economic_controller import EconomicIndicatorController
 from controller.employee_controller import EmployeeController
 from controller.project_controller import ProjectController
 from controller.shift_controller import ShiftController
@@ -10,15 +13,53 @@ from controller.report_controller import ReportController
 class Menu:
     def __init__(self):
         self.db = Database()
-        self.employee_controller = EmployeeController(self.db)
-        self.department_controller = DepartmentController(self.db)
-        self.project_controller = ProjectController(self.db)
-        self.shift_controller = ShiftController(self.db)
-        self.user_controller = UserController(self.db)
-        self.report_controller = ReportController(self.db)
+        self.current_user = None
+        self.employee_controller = EmployeeController(self.db, None)
+        self.department_controller = DepartmentController(self.db, None)
+        self.project_controller = ProjectController(self.db, None)
+        self.shift_controller = ShiftController(self.db, None)
+        self.user_controller = UserController(self.db, None)
+        self.report_controller = ReportController(self.db, None)
+        self.economic_controller = EconomicIndicatorController(self.db, None)
+
+    def login(self):
+        print("Inicio de sesión")
+        while True:
+            username = input("Ingresa tu nombre de usuario: ")
+            password = pwinput.pwinput("Ingresa tu contraseña: ", mask="*")
+            user = self.user_controller.login(self.db, username, password)
+            if user:
+                return user
 
     def start(self):
         print("Bienvenido al Sistema de Gestión de Empleados (EcoTech Solutions)")
+        rows = self.db.fetch_all("SELECT COUNT(*) FROM users", ())
+        is_empty = rows[0][0] == 0
+
+        if is_empty:
+            print("\nNo existen usuarios en el sistema.")
+            print("Crea el primer usuario (debe ser administrador).")
+
+            first_user_controller = UserController(self.db, None)
+            first_user_id = first_user_controller.create_user()
+            if not first_user_id:
+                print("\nNo se pudo crear el primer usuario. Inténtalo de nuevo.")
+                return
+
+            print("\nPrimer usuario creado. Ahora inicia sesión.")
+
+        print("Por favor, inicia sesión para continuar.")
+        current_user = self.login()
+        self.current_user = current_user
+
+        self.employee_controller.current_user = self.current_user
+        self.department_controller.current_user = self.current_user
+        self.project_controller.current_user = self.current_user
+        self.shift_controller.current_user = self.current_user
+        self.report_controller.current_user = self.current_user
+        self.economic_controller.current_user = self.current_user
+        self.user_controller = UserController(self.db, self.current_user)
+
         while True:
             option = self.main_menu()
             if option == "1":
@@ -33,6 +74,8 @@ class Menu:
                 self.report_menu()
             elif option == "6":
                 self.user_menu()
+            elif option == "7":
+                self.economic_menu()
             elif option == "0":
                 print("Saliendo...")
                 self.db.disconnect_database()
@@ -61,6 +104,7 @@ class Menu:
             "4. Registro de tiempo\n"
             "5. Reportes\n"
             "6. Usuarios\n"
+            "7. Indicadores economicos\n"
             "0. Salir"
         )
         return input("Opción: ")
@@ -160,3 +204,14 @@ class Menu:
             self.report_controller.generate_project_report()
         elif option == "4":
             self.report_controller.generate_shift_report()
+
+    def economic_menu(self):
+        print(
+            "\nIndicadores Económicos\n"
+            "1. Consultar indicador\n"
+            "0. Volver"
+        )
+        option = input("Opción: ")
+
+        if option == "1":
+            self.economic_controller.query_indicator()
