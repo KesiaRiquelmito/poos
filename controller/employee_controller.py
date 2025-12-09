@@ -3,17 +3,39 @@ from models.employee import Employee
 
 
 class EmployeeController:
-    def __init__(self, db: Database):
+    def __init__(self, db: Database, current_user):
         self.db = db
+        self.current_user = current_user
 
     def register_employee(self):
+        if not self.current_user.is_admin():
+            print("No tienes acceso como admin")
+            return
         print("\n--- Registrar Empleado ---")
         name = input("Nombre: ")
+        if not name:
+            print("El nombre es obligatorio.")
+            return
         email = input("Correo: ")
+        if not email:
+            print("El correo es obligatorio.")
+            return
         phone = input("Teléfono: ")
+        if not phone:
+            print("El teléfono es obligatorio.")
+            return
         address = input("Dirección: ")
+        if not address:
+            print("La dirección es obligatoria.")
+            return
         contract_date = input("Fecha inicio contrato (YYYY-MM-DD): ")
+        if not contract_date:
+            print("La fecha de inicio de contrato es obligatoria.")
+            return
         salary_input = input("Salario: ")
+        if not salary_input:
+            print("El salario es obligatorio.")
+            return
         salary = float(salary_input) if salary_input else None
         contract_start = contract_date if contract_date else None
 
@@ -33,6 +55,9 @@ class EmployeeController:
         return None
 
     def list_employees(self):
+        if not self.current_user.is_admin() and not self.current_user.is_manager():
+            print("No tienes permisos para ver empleados")
+            return
         print("\n--- Empleados ---")
         rows = Employee.list_employees(self.db)
         for row in rows:
@@ -40,6 +65,10 @@ class EmployeeController:
         return rows
 
     def delete_employee(self):
+        if not self.current_user.is_admin():
+            print("No tienes acceso como admin")
+            return
+
         emp_id = input("ID a eliminar: ")
         if not emp_id.isdigit():
             print("ID inválido")
@@ -48,6 +77,10 @@ class EmployeeController:
         print("Empleado eliminado.")
 
     def assign_department(self):
+        if not self.current_user.is_admin() and not self.current_user.is_manager():
+            print("No tienes permisos para asignar departamentos")
+            return
+
         emp_id = input("ID empleado: ")
         dept_id = input("ID departamento: ")
         if emp_id.isdigit() and dept_id.isdigit():
@@ -56,7 +89,11 @@ class EmployeeController:
         else:
             print("IDs inválidos.")
 
+
     def assign_project(self):
+        if not self.current_user.is_admin():
+            print("No tienes permisos para asignar proyectos")
+            return
         emp_id = input("ID empleado: ")
         proj_id = input("ID proyecto: ")
         if emp_id.isdigit() and proj_id.isdigit():
@@ -65,7 +102,11 @@ class EmployeeController:
         else:
             print("IDs inválidos.")
 
+
     def unassign_project(self):
+        if not self.current_user.is_admin():
+            print("No tienes permisos para desasignar proyectos")
+            return
         emp_id = input("ID empleado: ")
         proj_id = input("ID proyecto: ")
         if emp_id.isdigit() and proj_id.isdigit():
