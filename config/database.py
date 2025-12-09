@@ -9,7 +9,7 @@ class Database:
     def get_connection(self):
         connection = mysql.connector.connect(
             user="root",
-            password="qawsedr123",
+            password="root",
             host="localhost",
             database="poos",
             auth_plugin="mysql_native_password",
@@ -200,7 +200,20 @@ class Database:
             )
                 ON DELETE CASCADE
                 )
+            """,
             """
+            CREATE TABLE IF NOT EXISTS economic_indicators_logs
+            (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                indicator_name VARCHAR(100) NOT NULL,
+                indicator_date VARCHAR(50) NOT NULL,
+                query_date VARCHAR(50) NOT NULL,
+                username VARCHAR(255) NOT NULL,
+                provider_site VARCHAR(255) NOT NULL,
+                value DECIMAL(12,4) NULL
+            )
+            """
+
         ]
         for stmt in stmts:
             self.cursor.execute(stmt)
