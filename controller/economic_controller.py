@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from economic_indicators_logs import VALID_INDICATORS, EconomicIndicatorsLogs
+from services.economic_indicators_logs import VALID_INDICATORS, EconomicIndicatorsLogs
 from models.economic_indicator import EconomicIndicatorLog
 
 
